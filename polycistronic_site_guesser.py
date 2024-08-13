@@ -1,7 +1,6 @@
 from Bio import SeqIO
 
 
-#Sort the dictionary by the start positions
 def predict_possible_polycistronic_genes(gene_dictionary, chromosome):
 
 	chromosome_sequence = ""
@@ -12,6 +11,7 @@ def predict_possible_polycistronic_genes(gene_dictionary, chromosome):
 	translation_table = str.maketrans("ATCG", "TAGC")
 	reverse_chromosome_sequence = chromosome_sequence[::-1].translate(translation_table)
 
+	#Sort the dictionary by the start positions
 	sorted_genes = sorted(gene_dictionary.items(), key=lambda x: x[1][0])
 
 	close_genes = []
