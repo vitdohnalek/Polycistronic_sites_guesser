@@ -39,15 +39,15 @@ def predict_possible_polycistronic_genes(gene_dictionary, chromosome):
 			if not "CAAT" in upstream_sequence:
 				CAAT_check = True
 		else:
-			upstream_sequence = reverse_chromosome_sequence[current_gene[1][1]:current_gene[1][1] + 300]
+			upstream_sequence = reverse_chromosome_sequence[next_start-300:next_start-1]
 			if not "CAAT" in upstream_sequence:
 				CAAT_check = True
 
 	    #AT check
 		if current_gene[1][2] == "plus":
-			at_required_site = chromosome_sequence[current_gene[1][0]:next_start - 1]
+			at_required_site = chromosome_sequence[next_start-300:next_start-1]
 		else:
-			at_required_site = reverse_chromosome_sequence[current_gene[1][1] + 1:next_gene[1][1]]
+			at_required_site = reverse_chromosome_sequence[next_start-300:next_start-1]
 
 		def check_sites(sequence):
 			AT_content = True
