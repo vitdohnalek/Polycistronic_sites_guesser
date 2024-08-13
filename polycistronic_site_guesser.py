@@ -1,7 +1,7 @@
 from Bio import SeqIO
 
 
-#Identifies possible polycistronic sites in genome based on several criteria
+#Sort the dictionary by the start positions
 def predict_possible_polycistronic_genes(gene_dictionary, chromosome):
 
 	chromosome_sequence = ""
@@ -12,21 +12,20 @@ def predict_possible_polycistronic_genes(gene_dictionary, chromosome):
 	translation_table = str.maketrans("ATCG", "TAGC")
 	reverse_chromosome_sequence = chromosome_sequence[::-1].translate(translation_table)
 
-  #Sort the dictionary by the start positions
 	sorted_genes = sorted(gene_dictionary.items(), key=lambda x: x[1][0])
 
 	close_genes = []
 
 	for i in range(len(sorted_genes) - 1):
 		
-		distance_check = False #threshold minimum 25 nucleotides
-		CAAT_check = False #the second gene and 300 upstream nucleotides can not contain CAAT box
-		AT_check = False #the first gene plus the gap can not contain specific AT contant (see below)
+		distance_check = False
+		CAAT_check = False
+		AT_check = True
 	    
 		current_gene = sorted_genes[i]
 		next_gene = sorted_genes[i + 1]
 	    
-	  #Distance check
+	    #Distance check
 		current_end = current_gene[1][1]
 		next_start = next_gene[1][0]
 	    
@@ -34,21 +33,21 @@ def predict_possible_polycistronic_genes(gene_dictionary, chromosome):
 		if 0 < distance <= 25:
 			distance_check = True
 
-	  #CAAT check
+	    #CAAT check
 		if current_gene[1][2] == "plus":
 			upstream_sequence = chromosome_sequence[next_start-300:next_start]
 			if not "CAAT" in upstream_sequence:
 				CAAT_check = True
 		else:
-			upstream_sequence = reverse_chromosome_sequence[next_start-300:next_start]
+			upstream_sequence = reverse_chromosome_sequence[current_gene[1][1]:current_gene[1][1] + 300]
 			if not "CAAT" in upstream_sequence:
 				CAAT_check = True
 
-	  #AT check
+	    #AT check
 		if current_gene[1][2] == "plus":
 			at_required_site = chromosome_sequence[current_gene[1][0]:next_start - 1]
 		else:
-			at_required_site = reverse_chromosome_sequence[current_gene[1][0]:next_start - 1]
+			at_required_site = reverse_chromosome_sequence[current_gene[1][1]:next_gene[1][1]]
 
 		def check_sites(sequence):
 			window_sizes = [10, 11, 12] # Possible window sizes
@@ -57,7 +56,7 @@ def predict_possible_polycistronic_genes(gene_dictionary, chromosome):
 			def check_subsequence(subseq):
 				a_count = subseq.count("A")
 				t_count = subseq.count("T")
-				if not a_count >= 3 and not t_count >= 3 and not (a_count + t_count) >= 9:
+				if a_count >= 3 and t_count >= 3 and (a_count + t_count) >= 9:
 					return True
 
 			for size in window_sizes:
@@ -66,7 +65,7 @@ def predict_possible_polycistronic_genes(gene_dictionary, chromosome):
 				for start in range(seq_length - size + 1):
 					subseq = sequence[start:start + size]
 					if check_subsequence(subseq):
-						return True
+						return False
 
 		AT_check = check_sites(at_required_site)
 
@@ -99,7 +98,6 @@ def get_info(chromosome_n):
 						genes_info_minus[gene_name] = [start_position, end_position, "minus"]
 	return genes_info_plus, genes_info_minus
 
-#dictionary to replace the NCBI numbers with GL identificators
 gl_IDs = {}
 with open("giardia_genes_info.txt", "r") as f:
 	for l in f:
@@ -109,7 +107,6 @@ with open("giardia_genes_info.txt", "r") as f:
 plus_results = ""
 minus_results = ""
 
-#giardia has 5 chromosomes
 for i in range(5):
 	plus_results += f"Chromosome {i + 1}:\n"
 	minus_results += f"Chromosome {i + 1}:\n"
