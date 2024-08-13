@@ -35,7 +35,7 @@ def predict_possible_polycistronic_genes(gene_dictionary, chromosome):
 
 	    #CAAT check
 		if current_gene[1][2] == "plus":
-			upstream_sequence = chromosome_sequence[next_start-300:next_start]
+			upstream_sequence = chromosome_sequence[next_start-300:next_start-1]
 			if not "CAAT" in upstream_sequence:
 				CAAT_check = True
 		else:
@@ -47,16 +47,17 @@ def predict_possible_polycistronic_genes(gene_dictionary, chromosome):
 		if current_gene[1][2] == "plus":
 			at_required_site = chromosome_sequence[current_gene[1][0]:next_start - 1]
 		else:
-			at_required_site = reverse_chromosome_sequence[current_gene[1][1]:next_gene[1][1]]
+			at_required_site = reverse_chromosome_sequence[current_gene[1][1] + 1:next_gene[1][1]]
 
 		def check_sites(sequence):
-			window_sizes = [10, 11, 12] # Possible window sizes
+			AT_content = True
+			window_sizes = [11] # Possible window sizes
 			seq_length =len(sequence)
 
 			def check_subsequence(subseq):
 				a_count = subseq.count("A")
 				t_count = subseq.count("T")
-				if a_count >= 3 and t_count >= 3 and (a_count + t_count) >= 9:
+				if (a_count + t_count) >= 10:
 					return True
 
 			for size in window_sizes:
@@ -65,7 +66,8 @@ def predict_possible_polycistronic_genes(gene_dictionary, chromosome):
 				for start in range(seq_length - size + 1):
 					subseq = sequence[start:start + size]
 					if check_subsequence(subseq):
-						return False
+						AT_content = False
+			return(AT_content)
 
 		AT_check = check_sites(at_required_site)
 
